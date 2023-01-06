@@ -24,11 +24,72 @@ def Pantalla_Principal():
     ventana.mainloop()
 
 def registro():
-    global usuario 
-    global contraseña
-    global usuario_entrada
-    global contraseña_entrada
+    global Usuario 
+    global Contraseña
+    global User_entrada
+    global Password_entrada
     global ventana1
     ventana1 = Toplevel(ventana) #nivel superior a la ventana principal
     ventana1.title("Registro")
     ventana1.geometry("500x500")
+
+    # entradas de los registros del programa 
+    Usuario = StringVar()
+    Contraseña = StringVar()
+    label(ventana1, text="Registro Facial: debe asignar un usuario").pack()
+    label(ventana1, text="Registro Tradicional: debe asignar un usuario y contraseña").pack()
+    label(ventana1, text="").pack() # dejamos espacio
+    # mostramos el nombre del campo del texto y creamos un 
+    # campo de texto para que el usuario digite la informacion correspondiente
+    label(ventana1, text="USUARIO").pack()
+    User_entrada = Entry(ventana1,textvariable= Usuario).pack()
+    Password_entrada = Entry(ventana1,textvariable= Contraseña).pack()
+    label(ventana1, text="").pack()
+    # se crean los botones para los dos  registros del sistema
+    Button(ventana1,text="Registro Tradicional",width= 10, height=1, command=registro_tradicional).pack()
+    label(ventana1, text="").pack()
+    Button(ventana1,text="Registro Facial",width= 10, height=1, command=registro_facial).pack()
+
+# se crea un video y lo que se hace es obtener el ultimo fotograma como imagen para el registro
+def registro_facial():
+    captura = cv2.VideoCapture(0) # funcion para usar la camara con la que se va hacer el analisis facial
+    while(True):
+        ret,Frame = captura.read() # leemos el video
+        cv2.imshow("Registro Facial",Frame) # el metodo imshow() nos permite mostrar datos como imagen
+        if cv2.waitKey(1) == 27: # cuando oprimamos el boton escape el video termina 
+            break
+    User_img = Usuario.get()
+    cv2.imwrite(User_img+".jpg",Frame) # guardamos la ultima captura del video como imagen 
+    captura.release()
+    cv2.destroyAllWindows() # cerramos todas las ventanas que se encuentren abiertas 
+
+    User_entrada.delete(0,END) # limpiamos los valores que contienen las variables 
+    Password_entrada.delete(0,END)
+    # mensaje mostrado en el sistema cuando el registro facial sea exitoso
+    label(ventana1,text="Registro Facial Exitoso", fg="red", font=("Times",12)).pack()
+
+
+    def Analisis_rostro(img, lista_resultados):
+        datos = pyplot.imread(img)
+        for i in range(len(lista_resultados)):
+            x1,y1,ancho,alto = lista_resultados[i]['box']
+            x2,y2 = x1 + ancho, y1 + alto
+            pyplot.subplot(1, len(lista_resultados), i+1)
+            pyplot.axis('off')
+            cara_registrada = datos[y1:y2,x1:x2]
+            # se redimenciona la imagen con un tamaño de 150*200
+            cara_registrada = cv2.resize(cara_registrada, (150,200), interpolation=cv2.INTER_CUBIC)
+            cv2.imwrite(User_img+".jpg",cara_registrada)
+            pyplot.imshow(datos[y1:y2,x1:x2])
+        pyplot.show() # muestra en pantalla las figuras correspondiente a la entrada de datos 
+    
+    images = User_img+".jpg"
+    pixeles  = pyplot.imread(images)
+    detector = MTCNN() # metodo para la deteccion de rostros por medio de  redes convolucionales 
+    caras = detector.detect_faces(pixeles)
+    Analisis_rostro(images,caras)
+
+# def login():
+
+
+
